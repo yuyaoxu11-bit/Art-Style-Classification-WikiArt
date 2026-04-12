@@ -7,7 +7,10 @@ Yuyao Xu · Northeastern University · Spring 2026
 
 Classifies paintings into artistic styles (Impressionism, Baroque, Cubism, Romanticism, Realism,
 Abstract Expressionism) using WikiArt dataset. Compares a custom CNN baseline against ResNet18
-transfer learning (frozen vs. full fine-tuning). Includes a Gradio demo on Hugging Face Spaces.
+transfer learning (frozen vs. full fine-tuning). Includes a Gradio demo on Hugging Face Spaces: https://huggingface.co/spaces/yyx11/wikiart-style-classifier.
+
+<img width="1760" height="893" alt="Screenshot 2026-04-12 at 16 53 17" src="https://github.com/user-attachments/assets/192a4e52-66ee-451b-8a5c-37663076c942" />
+
 
 ## Setup
 
