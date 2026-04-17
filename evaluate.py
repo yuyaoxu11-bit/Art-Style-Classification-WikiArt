@@ -26,8 +26,10 @@ def load_model(ckpt_path, device):
     name = os.path.basename(ckpt_path)
     if "cnn_baseline" in name:
         model = CNNBaseline(num_classes=num_classes)
+    elif "densenet121" in name:
+        from models.network import build_densenet121
+        model = build_densenet121(num_classes=num_classes, freeze_backbone=False)
     else:
-        # frozen or full fine-tuned ResNet18
         model = build_resnet18(num_classes=num_classes, freeze_backbone=False)
 
     model.load_state_dict(ckpt["model_state_dict"])
@@ -84,6 +86,8 @@ def main(argv):
         "CNN Baseline":       "cnn_baseline.pth",
         "ResNet18 (frozen)":  "resnet18_frozen.pth",
         "ResNet18 (full)":    "resnet18_full.pth",
+        "DenseNet121 (frozen)": "densenet121_frozen.pth",
+        "DenseNet121 (full)": "densenet121_full.pth",
     }
 
     for model_name, ckpt_file in checkpoints.items():

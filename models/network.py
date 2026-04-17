@@ -58,3 +58,18 @@ def count_parameters(model):
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Total parameters:     {total:,}")
     print(f"Trainable parameters: {trainable:,}")
+
+
+# Build a DenseNet121 model with a custom classification head
+def build_densenet121(num_classes, freeze_backbone=True):
+    model = models.densenet121(weights=models.DenseNet121_Weights.IMAGENET1K_V1)
+
+    if freeze_backbone:
+        for param in model.parameters():
+            param.requires_grad = False
+
+    # Replace the classifier layer
+    in_features = model.classifier.in_features
+    model.classifier = nn.Linear(in_features, num_classes)
+
+    return model

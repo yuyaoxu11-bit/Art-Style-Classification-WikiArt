@@ -1,13 +1,15 @@
 # Yuyao Xu
 # Apr 2026
-# Fine-tunes a pretrained ResNet18 on the WikiArt style subset.
+# Fine-tunes a pretrained backbone on the WikiArt style subset.
 # Compares two strategies:
 #   (a) freeze_backbone=True  — only the final head is trained
 #   (b) freeze_backbone=False — all layers are fine-tuned end-to-end
 #
 # Usage:
-#   python train_transfer.py --strategy frozen --data_dir data/processed_debug
-#   python train_transfer.py --strategy full   --data_dir data/processed_debug
+#   python train_transfer.py --backbone resnet18   --strategy frozen --data_dir data/processed_debug
+#   python train_transfer.py --backbone resnet18   --strategy full   --data_dir data/processed_debug
+#   python train_transfer.py --backbone densenet121 --strategy frozen --data_dir data/processed_debug
+#   python train_transfer.py --backbone densenet121 --strategy full   --data_dir data/processed_debug
 
 import sys
 import os
@@ -16,7 +18,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from models.network import build_resnet18, count_parameters
+from models.network import build_resnet18, build_densenet121, count_parameters
 from utils.transforms import get_train_transform, get_val_transform
 from utils.dataset import get_dataloaders
 from train_baseline import train_one_epoch, evaluate, plot_curves
@@ -28,14 +30,16 @@ def main(argv):
     parser.add_argument("--data_dir",   type=str, default="data/processed_debug")
     parser.add_argument("--strategy",   type=str, choices=["frozen", "full"], default="frozen",
                         help="frozen: freeze backbone; full: fine-tune all layers")
+    parser.add_argument("--backbone",   type=str, choices=["resnet18", "densenet121"], default="resnet18",
+                        help="Backbone architecture to use")
     parser.add_argument("--epochs",     type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--lr",         type=float, default=1e-3)
     args = parser.parse_args(argv[1:])
 
-    freeze = (args.strategy == "frozen")
-    ckpt_name = f"resnet18_{args.strategy}.pth"
-    curve_name = f"resnet18_{args.strategy}_curves.png"
+    freeze     = (args.strategy == "frozen")
+    ckpt_name  = f"{args.backbone}_{args.strategy}.pth"
+    curve_name = f"{args.backbone}_{args.strategy}_curves.png"
 
     # Device selection
     if torch.backends.mps.is_available():
@@ -44,7 +48,7 @@ def main(argv):
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
-    print(f"Strategy: {args.strategy} | Device: {device}")
+    print(f"Backbone: {args.backbone} | Strategy: {args.strategy} | Device: {device}")
 
     # Load data
     train_loader, val_loader, _, class_names = get_dataloaders(
@@ -55,8 +59,11 @@ def main(argv):
     )
     num_classes = len(class_names)
 
-    # Build model
-    model = build_resnet18(num_classes=num_classes, freeze_backbone=freeze).to(device)
+    # Build model based on selected backbone
+    if args.backbone == "densenet121":
+        model = build_densenet121(num_classes=num_classes, freeze_backbone=freeze).to(device)
+    else:
+        model = build_resnet18(num_classes=num_classes, freeze_backbone=freeze).to(device)
     count_parameters(model)
 
     criterion = nn.CrossEntropyLoss()
@@ -87,9 +94,10 @@ def main(argv):
             os.makedirs("checkpoints", exist_ok=True)
             torch.save({
                 "model_state_dict": model.state_dict(),
-                "class_names": class_names,
-                "strategy": args.strategy,
-                "val_acc": vl_acc,
+                "class_names":      class_names,
+                "backbone":         args.backbone,
+                "strategy":         args.strategy,
+                "val_acc":          vl_acc,
             }, f"checkpoints/{ckpt_name}")
             print(f"  -> Saved best model (val_acc={vl_acc:.4f})")
 
