@@ -1,6 +1,6 @@
 # Yuyao Xu
 # Apr 2026
-# Defines CNN baseline and ResNet18 transfer learning model for art style classification
+# Defines CNN baseline, ResNet18 transfer learning model and DenseNet121 for art style classification
 
 import torch
 import torch.nn as nn
@@ -19,7 +19,6 @@ class CNNBaseline(nn.Module):
 
         self.pool = nn.MaxPool2d(2, 2)
         self.dropout = nn.Dropout(0.5)
-
         # Fully connected layers (input: 128 * 28 * 28 after 3x pooling of 224x224)
         self.fc1 = nn.Linear(128 * 28 * 28, 512)
         self.fc2 = nn.Linear(512, num_classes)
@@ -38,12 +37,10 @@ class CNNBaseline(nn.Module):
 # Build a ResNet18 model with a custom classification head
 def build_resnet18(num_classes, freeze_backbone=True):
     model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
-
     if freeze_backbone:
-        # Strategy (a): freeze all layers except the final head
+        # Strategy a: freeze all layers except the final head
         for param in model.parameters():
             param.requires_grad = False
-
     # Replace the final fully connected layer with a new classification head
     # matching the number of target style classes
     in_features = model.fc.in_features
@@ -63,11 +60,9 @@ def count_parameters(model):
 # Build a DenseNet121 model with a custom classification head
 def build_densenet121(num_classes, freeze_backbone=True):
     model = models.densenet121(weights=models.DenseNet121_Weights.IMAGENET1K_V1)
-
     if freeze_backbone:
         for param in model.parameters():
             param.requires_grad = False
-
     # Replace the classifier layer
     in_features = model.classifier.in_features
     model.classifier = nn.Linear(in_features, num_classes)

@@ -21,7 +21,6 @@ def load_model(ckpt_path, device):
     ckpt = torch.load(ckpt_path, map_location=device)
     class_names = ckpt["class_names"]
     num_classes = len(class_names)
-
     # Determine model type from checkpoint filename
     name = os.path.basename(ckpt_path)
     if "cnn_baseline" in name:
@@ -69,7 +68,6 @@ def main(argv):
     parser.add_argument("--data_dir", type=str, default="data/processed_debug")
     parser.add_argument("--ckpt_dir", type=str, default="checkpoints")
     args = parser.parse_args(argv[1:])
-
     # Device selection
     if torch.backends.mps.is_available():
         device = torch.device("mps")
@@ -78,7 +76,6 @@ def main(argv):
     else:
         device = torch.device("cpu")
     print(f"Using device: {device}")
-
     os.makedirs("outputs", exist_ok=True)
 
     # List checkpoints to evaluate
@@ -89,7 +86,6 @@ def main(argv):
         "DenseNet121 (frozen)": "densenet121_frozen.pth",
         "DenseNet121 (full)": "densenet121_full.pth",
     }
-
     for model_name, ckpt_file in checkpoints.items():
         ckpt_path = os.path.join(args.ckpt_dir, ckpt_file)
         if not os.path.exists(ckpt_path):
@@ -107,12 +103,9 @@ def main(argv):
             get_val_transform(),
             batch_size=32,
         )
-
         labels, preds = get_predictions(model, test_loader, device)
-
-        # Print classification report (includes per-class F1)
+        # Print classification report
         print(classification_report(labels, preds, target_names=class_names))
-
         # Plot confusion matrix
         safe_name = model_name.replace(" ", "_").replace("(", "").replace(")", "")
         plot_confusion_matrix(

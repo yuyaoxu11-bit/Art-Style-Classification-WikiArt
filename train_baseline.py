@@ -19,7 +19,6 @@ from utils.dataset import get_dataloaders
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
     total_loss, correct, total = 0.0, 0, 0
-
     for images, labels in loader:
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
@@ -40,7 +39,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 def evaluate(model, loader, criterion, device):
     model.eval()
     total_loss, correct, total = 0.0, 0, 0
-
     with torch.no_grad():
         for images, labels in loader:
             images, labels = images.to(device), labels.to(device)
@@ -58,7 +56,6 @@ def evaluate(model, loader, criterion, device):
 # Save training curves to a plot
 def plot_curves(train_losses, val_losses, train_accs, val_accs, save_path):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-
     ax1.plot(train_losses, label="Train Loss", color="steelblue")
     ax1.plot(val_losses,   label="Val Loss",   color="coral")
     ax1.set_title("Loss")
@@ -70,7 +67,6 @@ def plot_curves(train_losses, val_losses, train_accs, val_accs, save_path):
     ax2.set_title("Accuracy")
     ax2.set_xlabel("Epoch")
     ax2.legend()
-
     plt.tight_layout()
     plt.savefig(save_path)
     print(f"Saved training curves: {save_path}")
@@ -86,7 +82,6 @@ def main(argv):
     parser.add_argument("--debug",      action="store_true",
                         help="Use small dataset for local debugging")
     args = parser.parse_args(argv[1:])
-
     # Device selection: MPS for Apple Silicon, CUDA for NVIDIA, else CPU
     if torch.backends.mps.is_available():
         device = torch.device("mps")
@@ -104,19 +99,15 @@ def main(argv):
         batch_size=args.batch_size,
     )
     num_classes = len(class_names)
-
     # Build model
     model = CNNBaseline(num_classes=num_classes).to(device)
     count_parameters(model)
-
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
-
     # Training loop
     train_losses, val_losses = [], []
     train_accs,   val_accs   = [], []
     best_val_acc = 0.0
-
     for epoch in range(1, args.epochs + 1):
         tr_loss, tr_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
         vl_loss, vl_acc = evaluate(model, val_loader, criterion, device)
@@ -125,11 +116,9 @@ def main(argv):
         val_losses.append(vl_loss)
         train_accs.append(tr_acc)
         val_accs.append(vl_acc)
-
         print(f"Epoch {epoch:>3}/{args.epochs} | "
               f"Train Loss: {tr_loss:.4f}  Acc: {tr_acc:.4f} | "
               f"Val Loss: {vl_loss:.4f}  Acc: {vl_acc:.4f}")
-
         # Save best model
         if vl_acc > best_val_acc:
             best_val_acc = vl_acc
@@ -140,7 +129,6 @@ def main(argv):
                 "val_acc": vl_acc,
             }, "checkpoints/cnn_baseline.pth")
             print(f"  -> Saved best model (val_acc={vl_acc:.4f})")
-
     # Save training curves
     os.makedirs("outputs", exist_ok=True)
     plot_curves(train_losses, val_losses, train_accs, val_accs,

@@ -24,11 +24,7 @@ DEBUG_SAMPLES_PER_CLASS = 50
 FULL_SAMPLES_PER_CLASS  = 1500
 
 
-# Sample a balanced subset from a flat source directory and organize into
-# train/val/test splits following ImageFolder format:
-#   root/train/ClassName/img.jpg
-#   root/val/ClassName/img.jpg
-#   root/test/ClassName/img.jpg
+# Sample a balanced subset from a flat source directory and organize into train/val/test
 def prepare_local_dataset(source_dir, output_dir, samples_per_class,
                            train_ratio=0.7, val_ratio=0.15, seed=42):
     random.seed(seed)
@@ -47,22 +43,18 @@ def prepare_local_dataset(source_dir, output_dir, samples_per_class,
         all_images = [f for f in os.listdir(cls_dir)
                       if f.lower().endswith((".jpg", ".jpeg", ".png"))]
         sampled = random.sample(all_images, min(samples_per_class, len(all_images)))
-
         n_train = int(len(sampled) * train_ratio)
         n_val   = int(len(sampled) * val_ratio)
-
         splits = {
             "train": sampled[:n_train],
             "val":   sampled[n_train:n_train + n_val],
             "test":  sampled[n_train + n_val:],
         }
-
         for split, files in splits.items():
             for fname in files:
                 src = os.path.join(cls_dir, fname)
                 dst = os.path.join(output_dir, split, cls, fname)
                 shutil.copy2(src, dst)
-
         print(f"[{cls}] train={len(splits['train'])}  "
               f"val={len(splits['val'])}  test={len(splits['test'])}")
 

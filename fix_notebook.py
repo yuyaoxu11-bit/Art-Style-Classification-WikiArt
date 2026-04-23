@@ -1,6 +1,7 @@
-# fix_notebook.py
+# Yuyao Xu
+# Apr 2026
 # Removes widget metadata from the Colab notebook to fix GitHub rendering.
-#
+
 
 import json
 
